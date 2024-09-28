@@ -10,94 +10,80 @@
       margin: 0;
       padding: 0;
       background-color: #f4f4f4;
-      text-transform: uppercase;
     }
+
     .container {
-      max-width: 600px;
-      margin: 50px auto;
-      background-color: #fff;
+      max-width: 800px;
+      margin: 20px auto;
       padding: 20px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      background-color: white;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
-    h1 {
-      text-align: center;
+
+    h1, h2 {
       color: #333;
     }
+
     form {
-      display: flex;
-      flex-direction: column;
+      margin-bottom: 20px;
     }
+
     label {
-      margin: 10px 0 5px;
+      display: block;
+      margin-bottom: 5px;
       font-weight: bold;
     }
-    input, select, textarea {
-      padding: 10px;
-      margin-bottom: 20px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+
+    input, select {
       width: 100%;
-      box-sizing: border-box;
-    }
-    button {
-      padding: 10px;
-      background-color: #28a745;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #218838;
-    }
-    .agendamentos {
-      margin-top: 30px;
-    }
-    .agendamento-item {
-      background-color: #e9ecef;
-      padding: 10px;
+      padding: 8px;
       margin-bottom: 10px;
       border-radius: 4px;
-      position: relative;
+      border: 1px solid #ccc;
     }
-    .hidden {
-      display: none;
-    }
-    .planner-button {
-      margin-top: 20px;
-      padding: 10px;
-      background-color: #007bff;
+
+    button {
+      display: inline-block;
+      padding: 10px 15px;
+      background-color: #28a745;
       color: white;
       border: none;
       border-radius: 4px;
       cursor: pointer;
     }
-    .planner-button:hover {
-      background-color: #0056b3;
+
+    button:hover {
+      background-color: #218838;
     }
+
+    .agendamentos {
+      margin-top: 20px;
+      background-color: #f9f9f9;
+      padding: 20px;
+      border-radius: 4px;
+    }
+
+    .agendamento-item {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+    }
+
     .planner {
       display: none;
-      margin-top: 20px;
     }
+
     .planner-table {
       width: 100%;
       border-collapse: collapse;
     }
+
     .planner-table th, .planner-table td {
       border: 1px solid #ccc;
       padding: 10px;
-      text-align: center;
     }
-    .back-button {
-      padding: 10px;
-      background-color: #28a745;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .back-button:hover {
-      background-color: #218838;
+
+    .hidden {
+      display: none;
     }
   </style>
 </head>
@@ -106,59 +92,29 @@
   <div class="container">
     <h1>AGENDAMENTO DE SALAS</h1>
     <form id="agendamentoForm">
-      
-      <!-- Finalidade -->
-      <label for="finalidade">FINALIDADE:</label>
-      <select id="finalidade" required>
-        <option value="">SELECIONE A FINALIDADE</option>
-        <option value="AULA">AULA</option>
-        <option value="TCC">TCC</option>
-        <option value="PROVA">PROVA</option>
-        <option value="DISCUSSÃO DE CASO">DISCUSSÃO DE CASO</option>
-        <option value="MANUTENÇÃO">MANUTENÇÃO</option>
+      <label for="finalidade">Finalidade</label>
+      <input type="text" id="finalidade" name="finalidade" required>
+
+      <label for="solicitante">Solicitante</label>
+      <input type="text" id="solicitante" name="solicitante" required>
+
+      <label for="nomeSolicitante">Nome do Solicitante</label>
+      <input type="text" id="nomeSolicitante" name="nomeSolicitante" required>
+
+      <label for="sala">Sala</label>
+      <select id="sala" name="sala" required>
+        <option value="Sala 1">Sala 1</option>
+        <option value="Sala 2">Sala 2</option>
+        <option value="Sala 3">Sala 3</option>
       </select>
 
-      <!-- Campos adicionais para TCC -->
-      <div id="tccFields" class="hidden">
-        <label for="temaTcc">TEMA TCC:</label>
-        <input type="text" id="temaTcc" placeholder="DIGITE O TEMA DO TCC">
+      <label for="data">Data</label>
+      <input type="date" id="data" name="data" required>
 
-        <label for="bancaTcc">INTEGRANTES DA BANCA:</label>
-        <input type="text" id="bancaTcc" placeholder="DIGITE OS INTEGRANTES DA BANCA">
+      <label for="hora">Hora</label>
+      <input type="time" id="hora" name="hora" required>
 
-        <label for="orientadorTcc">ORIENTADOR:</label>
-        <input type="text" id="orientadorTcc" placeholder="DIGITE O NOME DO ORIENTADOR">
-      </div>
-
-      <!-- Campo adicional para Manutenção -->
-      <div id="manutencaoFields" class="hidden">
-        <label for="motivoManutencao">MOTIVO DA MANUTENÇÃO:</label>
-        <input type="text" id="motivoManutencao" placeholder="DIGITE O MOTIVO DA MANUTENÇÃO">
-      </div>
-
-      <!-- Solicitante -->
-      <label for="solicitante">SOLICITANTE:</label>
-      <select id="solicitante" required>
-        <!-- As opções serão preenchidas dinamicamente -->
-      </select>
-
-      <label for="nomeSolicitante">NOME DO SOLICITANTE:</label>
-      <input type="text" id="nomeSolicitante" required placeholder="DIGITE O NOME DO SOLICITANTE">
-
-      <!-- Sala e Data -->
-      <label for="sala">ESCOLHA A SALA:</label>
-      <select id="sala" required>
-        <option value="Sala 1">SALA 1</option>
-        <option value="Sala 2">SALA 2</option>
-      </select>
-
-      <label for="data">ESCOLHA A DATA:</label>
-      <input type="date" id="data" required>
-
-      <label for="hora">ESCOLHA O HORÁRIO:</label>
-      <input type="time" id="hora" required>
-
-      <button type="submit" id="agendarButton">AGENDAR</button>
+      <button type="submit">Agendar</button>
     </form>
 
     <button class="planner-button" id="verMes">VER AGENDAMENTOS MENSAIS</button>
@@ -168,7 +124,6 @@
       <div id="listaAgendamentos"></div>
     </div>
 
-    <!-- Planner Mensal -->
     <div class="planner hidden" id="planner">
       <h2>PLANNER MENSAL</h2>
       <table class="planner-table">
@@ -186,13 +141,13 @@
     </div>
   </div>
 
-  <!-- Firebase SDK via NPM -->
+  <!-- Firebase SDK -->
   <script type="module">
-    // Import the Firebase SDK via NPM
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-firestore.js";
+    // Importar o Firebase SDK
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.9.0/firebase-app.js';
+    import { getFirestore, collection, addDoc, getDocs } from 'https://www.gstatic.com/firebasejs/9.9.0/firebase-firestore.js';
 
-    // Firebase configuration
+    // Configuração do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBw3KtxT-386kduvlDLyCHWYsdc_Ny3j9Y",
       authDomain: "agendamento-de-sala-c348d.firebaseapp.com",
@@ -202,7 +157,7 @@
       appId: "1:1051108935402:web:d87c0ce75b27a6908f3993"
     };
 
-    // Initialize Firebase
+    // Inicializar o Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
@@ -224,21 +179,25 @@
       const listaAgendamentos = document.getElementById('listaAgendamentos');
       listaAgendamentos.innerHTML = ''; // Limpar a lista antes de exibir
 
-      // Busca os agendamentos no Firestore
-      const querySnapshot = await getDocs(collection(db, 'agendamentos'));
-      querySnapshot.forEach((doc) => {
-        const agendamento = doc.data();
-        const div = document.createElement('div');
-        div.classList.add('agendamento-item');
-        div.innerHTML = `
-          <strong>FINALIDADE:</strong> ${agendamento.finalidade}<br>
-          <strong>SOLICITANTE:</strong> ${agendamento.solicitante} - ${agendamento.nomeSolicitante}<br>
-          <strong>SALA:</strong> ${agendamento.sala}<br>
-          <strong>DATA:</strong> ${agendamento.data}<br>
-          <strong>HORA:</strong> ${agendamento.hora}
-        `;
-        listaAgendamentos.appendChild(div);
-      });
+      try {
+        // Busca os agendamentos no Firestore
+        const querySnapshot = await getDocs(collection(db, 'agendamentos'));
+        querySnapshot.forEach((doc) => {
+          const agendamento = doc.data();
+          const div = document.createElement('div');
+          div.classList.add('agendamento-item');
+          div.innerHTML = `
+            <strong>FINALIDADE:</strong> ${agendamento.finalidade}<br>
+            <strong>SOLICITANTE:</strong> ${agendamento.solicitante} - ${agendamento.nomeSolicitante}<br>
+            <strong>SALA:</strong> ${agendamento.sala}<br>
+            <strong>DATA:</strong> ${agendamento.data}<br>
+            <strong>HORA:</strong> ${agendamento.hora}
+          `;
+          listaAgendamentos.appendChild(div);
+        });
+      } catch (error) {
+        console.error('Erro ao listar agendamentos: ', error);
+      }
     }
 
     // Quando o formulário for enviado
@@ -279,124 +238,6 @@
 
     // Carregar os agendamentos quando a página carregar
     window.onload = listarAgendamentos;
-  </script>
-
-  <script>
-    const form = document.getElementById('agendamentoForm');
-    const listaAgendamentos = document.getElementById('listaAgendamentos');
-    const agendarButton = document.getElementById('agendarButton');
-    const verMesBtn = document.getElementById('verMes');
-    const planner = document.getElementById('planner');
-    const plannerBody = document.getElementById('plannerBody');
-    const voltarBtn = document.getElementById('voltar');
-
-    const finalidadeSelect = document.getElementById('finalidade');
-    const solicitanteSelect = document.getElementById('solicitante');
-    const nomeSolicitanteInput = document.getElementById('nomeSolicitante');
-
-    const tccFields = document.getElementById('tccFields');
-    const manutencaoFields = document.getElementById('manutencaoFields');
-
-    const temaTcc = document.getElementById('temaTcc');
-    const bancaTcc = document.getElementById('bancaTcc');
-    const orientadorTcc = document.getElementById('orientadorTcc');
-    const motivoManutencao = document.getElementById('motivoManutencao');
-
-    // Lista de professores
-    const professores = ['BRUNA MARCELE', 'DANIELLE BACARELLI', 'DIANA COSTA', 'DOUGLAS CARAGELASCO', 'JOÃO FLÁVIO', 'LÍVIA BIAZZO', 'MARIANA MIRANDA', 'MARILIA FILIPONI', 'MARTA LUPPI', 'MICHELE BARROS', 'PAULA GUIMARÃES', 'PAULO GRISKA', 'PAULO ANSELMO', 'RAFAEL NEVES'];
-
-    const carregarSolicitantes = (finalidade) => {
-      solicitanteSelect.innerHTML = ''; // Limpar as opções anteriores
-
-      let options = [];
-
-      switch (finalidade) {
-        case 'AULA':
-          options = ['PROFESSOR', 'RESIDENTE'];
-          break;
-        case 'TCC':
-          options = ['ALUNO', 'PROFESSOR'];
-          break;
-        case 'PROVA':
-        case 'DISCUSSÃO DE CASO':
-          options = ['RESIDENTE', 'PROFESSOR'];
-          break;
-        case 'MANUTENÇÃO':
-          options = ['RESP. TÉCNICO', 'GERENTE'];
-          break;
-        default:
-          break;
-      }
-
-      options.forEach(option => {
-        const opt = document.createElement('option');
-        opt.value = option.toUpperCase();
-        opt.textContent = option;
-        solicitanteSelect.appendChild(opt);
-      });
-
-      // Disparar o evento de alteração do solicitante para preencher o campo de nome
-      solicitanteSelect.dispatchEvent(new Event('change'));
-    };
-
-    // Exibir campos adicionais com base na finalidade selecionada
-    finalidadeSelect.addEventListener('change', function() {
-      carregarSolicitantes(this.value);
-
-      if (this.value === 'TCC') {
-        tccFields.classList.remove('hidden');
-        manutencaoFields.classList.add('hidden');
-      } else if (this.value === 'MANUTENÇÃO') {
-        manutencaoFields.classList.remove('hidden');
-        tccFields.classList.add('hidden');
-      } else {
-        tccFields.classList.add('hidden');
-        manutencaoFields.classList.add('hidden');
-      }
-    });
-
-    // Alterar o campo de nome solicitante com base no solicitante selecionado
-    solicitanteSelect.addEventListener('change', function() {
-      const selecionado = this.value;
-
-      if (selecionado === 'PROFESSOR') {
-        // Se for professor, exibir uma lista de professores
-        nomeSolicitanteInput.innerHTML = ''; // Limpar qualquer valor no campo de texto
-
-        const professorSelect = document.createElement('select');
-        professorSelect.id = 'professorSelect';
-        professorSelect.required = true;
-
-        professores.forEach(professor => {
-          const option = document.createElement('option');
-          option.value = professor;
-          option.text = professor;
-          professorSelect.appendChild(option);
-        });
-
-        nomeSolicitanteInput.replaceWith(professorSelect);
-      } else if (selecionado === 'RESP. TÉCNICO') {
-        nomeSolicitanteInput.value = 'LEANDRO BIAZZO'; // Preencher automaticamente com Leandro Biazzo
-        nomeSolicitanteInput.disabled = true; // Desabilitar edição
-      } else if (selecionado === 'GERENTE') {
-        nomeSolicitanteInput.value = 'ELLEN BIANCA'; // Preencher automaticamente com Ellen Bianca
-        nomeSolicitanteInput.disabled = true; // Desabilitar edição
-      } else {
-        // Se não for professor, responsável técnico ou gerente, permitir digitação
-        if (document.getElementById('professorSelect')) {
-          const textInput = document.createElement('input');
-          textInput.id = 'nomeSolicitante';
-          textInput.type = 'text';
-          textInput.required = true;
-          textInput.placeholder = 'DIGITE O NOME DO SOLICITANTE';
-          document.getElementById('professorSelect').replaceWith(textInput);
-        } else {
-          nomeSolicitanteInput.value = '';
-          nomeSolicitanteInput.disabled = false; // Habilitar edição
-        }
-      }
-    });
-
   </script>
 
 </body>
