@@ -99,24 +99,6 @@
     .back-button:hover {
       background-color: #218838;
     }
-    .edit-button, .delete-button {
-      background-color: #ffc107;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-right: 5px;
-      padding: 5px 10px;
-    }
-    .delete-button {
-      background-color: #dc3545;
-    }
-    .edit-button:hover {
-      background-color: #e0a800;
-    }
-    .delete-button:hover {
-      background-color: #c82333;
-    }
   </style>
 </head>
 <body>
@@ -206,9 +188,11 @@
 
   <!-- Firebase SDK via NPM -->
   <script type="module">
+    // Import the Firebase SDK via NPM
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-firestore.js";
 
+    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyBw3KtxT-386kduvlDLyCHWYsdc_Ny3j9Y",
       authDomain: "agendamento-de-sala-c348d.firebaseapp.com",
@@ -218,33 +202,29 @@
       appId: "1:1051108935402:web:d87c0ce75b27a6908f3993"
     };
 
+    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    let editandoId = null;
-
+    // Função para salvar agendamentos no Firestore
     async function salvarAgendamento(agendamento) {
       try {
-        if (editandoId) {
-          const agendamentoRef = doc(db, "agendamentos", editandoId);
-          await updateDoc(agendamentoRef, agendamento);
-          alert('Agendamento atualizado com sucesso!');
-        } else {
-          await addDoc(collection(db, 'agendamentos'), agendamento);
-          alert('Agendamento salvo com sucesso!');
-        }
-        listarAgendamentos();
-        editandoId = null;
+        // Adiciona o agendamento ao Firestore
+        await addDoc(collection(db, 'agendamentos'), agendamento);
+        alert('Agendamento salvo com sucesso!');
+        listarAgendamentos(); // Atualiza a lista de agendamentos
       } catch (error) {
         console.error('Erro ao salvar agendamento: ', error);
         alert('Erro ao salvar agendamento. Tente novamente.');
       }
     }
 
+    // Função para listar agendamentos do Firestore
     async function listarAgendamentos() {
       const listaAgendamentos = document.getElementById('listaAgendamentos');
-      listaAgendamentos.innerHTML = '';
+      listaAgendamentos.innerHTML = ''; // Limpar a lista antes de exibir
 
+      // Busca os agendamentos no Firestore
       const querySnapshot = await getDocs(collection(db, 'agendamentos'));
       querySnapshot.forEach((doc) => {
         const agendamento = doc.data();
@@ -255,72 +235,168 @@
           <strong>SOLICITANTE:</strong> ${agendamento.solicitante} - ${agendamento.nomeSolicitante}<br>
           <strong>SALA:</strong> ${agendamento.sala}<br>
           <strong>DATA:</strong> ${agendamento.data}<br>
-          <strong>HORA:</strong> ${agendamento.hora}<br>
-          <button class="edit-button" data-id="${doc.id}">EDITAR</button>
-          <button class="delete-button" data-id="${doc.id}">EXCLUIR</button>
+          <strong>HORA:</strong> ${agendamento.hora}
         `;
         listaAgendamentos.appendChild(div);
       });
-
-      document.querySelectorAll('.edit-button').forEach(button => {
-        button.addEventListener('click', carregarAgendamentoParaEdicao);
-      });
-
-      document.querySelectorAll('.delete-button').forEach(button => {
-        button.addEventListener('click', excluirAgendamento);
-      });
     }
 
-    async function excluirAgendamento(event) {
-      const id = event.target.getAttribute('data-id');
-      const confirmacao = confirm("Tem certeza que deseja excluir este agendamento?");
-      if (confirmacao) {
-        try {
-          await deleteDoc(doc(db, 'agendamentos', id));
-          alert('Agendamento excluído com sucesso!');
-          listarAgendamentos();
-        } catch (error) {
-          console.error('Erro ao excluir agendamento: ', error);
-          alert('Erro ao excluir agendamento.');
-        }
-      }
-    }
-
-    function carregarAgendamentoParaEdicao(event) {
-      const id = event.target.getAttribute('data-id');
-      editandoId = id;
-
-      // Carregar dados do agendamento para o formulário
-      const div = event.target.parentElement;
-      document.getElementById('finalidade').value = div.querySelector('strong:nth-child(1)').textContent.split(': ')[1];
-      document.getElementById('solicitante').value = div.querySelector('strong:nth-child(2)').textContent.split(': ')[1].split(' - ')[0];
-      document.getElementById('nomeSolicitante').value = div.querySelector('strong:nth-child(2)').textContent.split(': ')[1].split(' - ')[1];
-      document.getElementById('sala').value = div.querySelector('strong:nth-child(3)').textContent.split(': ')[1];
-      document.getElementById('data').value = div.querySelector('strong:nth-child(4)').textContent.split(': ')[1];
-      document.getElementById('hora').value = div.querySelector('strong:nth-child(5)').textContent.split(': ')[1];
-
-      document.getElementById('agendarButton').textContent = 'ATUALIZAR';
-    }
-
+    // Quando o formulário for enviado
     const form = document.getElementById('agendamentoForm');
     form.addEventListener('submit', function(event) {
       event.preventDefault();
 
+      // Capturar os dados do formulário
+      const finalidade = document.getElementById('finalidade').value;
+      const solicitante = document.getElementById('solicitante').value;
+      const nomeSolicitante = document.getElementById('nomeSolicitante').value;
+      const sala = document.getElementById('sala').value;
+      const data = document.getElementById('data').value;
+      const hora = document.getElementById('hora').value;
+
+      // Verificar se todos os campos obrigatórios foram preenchidos
+      if (!finalidade || !solicitante || !nomeSolicitante || !sala || !data || !hora) {
+        alert('Por favor, preencha todos os campos.');
+        return;
+      }
+
+      // Dados do agendamento a serem salvos
       const agendamento = {
-        finalidade: document.getElementById('finalidade').value,
-        solicitante: document.getElementById('solicitante').value,
-        nomeSolicitante: document.getElementById('nomeSolicitante').value,
-        sala: document.getElementById('sala').value,
-        data: document.getElementById('data').value,
-        hora: document.getElementById('hora').value
+        finalidade,
+        solicitante,
+        nomeSolicitante,
+        sala,
+        data,
+        hora
       };
 
+      // Chamar a função para salvar o agendamento no Firestore
       salvarAgendamento(agendamento);
+
+      // Limpar o formulário após o envio
       form.reset();
-      document.getElementById('agendarButton').textContent = 'AGENDAR';
     });
 
+    // Carregar os agendamentos quando a página carregar
     window.onload = listarAgendamentos;
+  </script>
+
+  <script>
+    const form = document.getElementById('agendamentoForm');
+    const listaAgendamentos = document.getElementById('listaAgendamentos');
+    const agendarButton = document.getElementById('agendarButton');
+    const verMesBtn = document.getElementById('verMes');
+    const planner = document.getElementById('planner');
+    const plannerBody = document.getElementById('plannerBody');
+    const voltarBtn = document.getElementById('voltar');
+
+    const finalidadeSelect = document.getElementById('finalidade');
+    const solicitanteSelect = document.getElementById('solicitante');
+    const nomeSolicitanteInput = document.getElementById('nomeSolicitante');
+
+    const tccFields = document.getElementById('tccFields');
+    const manutencaoFields = document.getElementById('manutencaoFields');
+
+    const temaTcc = document.getElementById('temaTcc');
+    const bancaTcc = document.getElementById('bancaTcc');
+    const orientadorTcc = document.getElementById('orientadorTcc');
+    const motivoManutencao = document.getElementById('motivoManutencao');
+
+    // Lista de professores
+    const professores = ['BRUNA MARCELE', 'DANIELLE BACARELLI', 'DIANA COSTA', 'DOUGLAS CARAGELASCO', 'JOÃO FLÁVIO', 'LÍVIA BIAZZO', 'MARIANA MIRANDA', 'MARILIA FILIPONI', 'MARTA LUPPI', 'MICHELE BARROS', 'PAULA GUIMARÃES', 'PAULO GRISKA', 'PAULO ANSELMO', 'RAFAEL NEVES'];
+
+    const carregarSolicitantes = (finalidade) => {
+      solicitanteSelect.innerHTML = ''; // Limpar as opções anteriores
+
+      let options = [];
+
+      switch (finalidade) {
+        case 'AULA':
+          options = ['PROFESSOR', 'RESIDENTE'];
+          break;
+        case 'TCC':
+          options = ['ALUNO', 'PROFESSOR'];
+          break;
+        case 'PROVA':
+        case 'DISCUSSÃO DE CASO':
+          options = ['RESIDENTE', 'PROFESSOR'];
+          break;
+        case 'MANUTENÇÃO':
+          options = ['RESP. TÉCNICO', 'GERENTE'];
+          break;
+        default:
+          break;
+      }
+
+      options.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option.toUpperCase();
+        opt.textContent = option;
+        solicitanteSelect.appendChild(opt);
+      });
+
+      // Disparar o evento de alteração do solicitante para preencher o campo de nome
+      solicitanteSelect.dispatchEvent(new Event('change'));
+    };
+
+    // Exibir campos adicionais com base na finalidade selecionada
+    finalidadeSelect.addEventListener('change', function() {
+      carregarSolicitantes(this.value);
+
+      if (this.value === 'TCC') {
+        tccFields.classList.remove('hidden');
+        manutencaoFields.classList.add('hidden');
+      } else if (this.value === 'MANUTENÇÃO') {
+        manutencaoFields.classList.remove('hidden');
+        tccFields.classList.add('hidden');
+      } else {
+        tccFields.classList.add('hidden');
+        manutencaoFields.classList.add('hidden');
+      }
+    });
+
+    // Alterar o campo de nome solicitante com base no solicitante selecionado
+    solicitanteSelect.addEventListener('change', function() {
+      const selecionado = this.value;
+
+      if (selecionado === 'PROFESSOR') {
+        // Se for professor, exibir uma lista de professores
+        nomeSolicitanteInput.innerHTML = ''; // Limpar qualquer valor no campo de texto
+
+        const professorSelect = document.createElement('select');
+        professorSelect.id = 'professorSelect';
+        professorSelect.required = true;
+
+        professores.forEach(professor => {
+          const option = document.createElement('option');
+          option.value = professor;
+          option.text = professor;
+          professorSelect.appendChild(option);
+        });
+
+        nomeSolicitanteInput.replaceWith(professorSelect);
+      } else if (selecionado === 'RESP. TÉCNICO') {
+        nomeSolicitanteInput.value = 'LEANDRO BIAZZO'; // Preencher automaticamente com Leandro Biazzo
+        nomeSolicitanteInput.disabled = true; // Desabilitar edição
+      } else if (selecionado === 'GERENTE') {
+        nomeSolicitanteInput.value = 'ELLEN BIANCA'; // Preencher automaticamente com Ellen Bianca
+        nomeSolicitanteInput.disabled = true; // Desabilitar edição
+      } else {
+        // Se não for professor, responsável técnico ou gerente, permitir digitação
+        if (document.getElementById('professorSelect')) {
+          const textInput = document.createElement('input');
+          textInput.id = 'nomeSolicitante';
+          textInput.type = 'text';
+          textInput.required = true;
+          textInput.placeholder = 'DIGITE O NOME DO SOLICITANTE';
+          document.getElementById('professorSelect').replaceWith(textInput);
+        } else {
+          nomeSolicitanteInput.value = '';
+          nomeSolicitanteInput.disabled = false; // Habilitar edição
+        }
+      }
+    });
+
   </script>
 
 </body>
