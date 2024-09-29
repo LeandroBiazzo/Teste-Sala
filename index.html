@@ -194,6 +194,7 @@
     const nomeSolicitanteField = document.getElementById('nomeSolicitanteField');
     const solicitanteSelect = document.getElementById('solicitante');
     const nomeSolicitanteInput = document.getElementById('nomeSolicitante');
+    const orientadorTccSelect = document.getElementById('orientadorTcc');
 
     const professores = ['Bruna Marcele', 'Danielle Bacarelli', 'Diana Costa', 'Douglas Caragelasco', 'João Flávio', 'Lívia Biazzo', 'Mariana Miranda', 'Marilia Filiponi', 'Marta Luppi', 'Michele Barros', 'Paula Guimarães', 'Paulo Griska', 'Paulo Anselmo', 'Rafael Neves', 'Raphaela Brito'];
     const residentes = ['R1 CLIN. PEQ', 'R2 CLIN. PEQ', 'R1 ANEST', 'R2 ANEST', 'R1 IMAGEM', 'R2 IMAGEM', 'R1 CLIN. GRANDES', 'R2 CLIN. GRANDES'];
@@ -214,7 +215,12 @@
           solicitanteSelect.appendChild(option);
         });
       } else if (finalidade === 'TCC') {
-        solicitanteSelect.innerHTML = '<option value=""> </option>'; 
+        professores.forEach(nome => {
+          const option = document.createElement('option');
+          option.value = nome;
+          option.textContent = nome;
+          orientadorTccSelect.appendChild(option);
+        });
       } else if (finalidade === 'MANUTENÇÃO') {
         manutencaoNomes.forEach(nome => {
           const option = document.createElement('option');
@@ -234,15 +240,14 @@
 
       if (finalidade === 'TCC') {
         tccFields.classList.remove('hidden');
-        solicitanteFields.classList.remove('hidden');
-        atualizarSolicitante(finalidade); 
+        atualizarSolicitante(finalidade);
       } else if (finalidade === 'AULA' || finalidade === 'PROVA' || finalidade === 'DISCUSSÃO DE CASO') {
         solicitanteFields.classList.remove('hidden');
-        atualizarSolicitante(finalidade); 
+        atualizarSolicitante(finalidade);
       } else if (finalidade === 'MANUTENÇÃO') {
         manutencaoFields.classList.remove('hidden');
         solicitanteFields.classList.remove('hidden');
-        atualizarSolicitante(finalidade); 
+        atualizarSolicitante(finalidade);
       } else if (finalidade === 'REUNIÃO') {
         nomeSolicitanteField.classList.remove('hidden');
       }
@@ -319,14 +324,58 @@
       agendamentosLista.appendChild(novoAgendamento);
     }
 
-    window.editarAgendamento = function(id) {
-      // Implementar a lógica de edição
-      console.log('Editar agendamento:', id);
+    window.editarAgendamento = async function(id) {
+      try {
+        const docRef = doc(db, "agendamentos", id);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const agendamento = docSnap.data();
+          
+          finalidadeSelect.value = agendamento.finalidade;
+          finalidadeSelect.dispatchEvent(new Event('change'));
+          
+          if (agendamento.finalidade === 'TCC') {
+            document.getElementById('temaTcc').value = agendamento.temaTcc || '';
+            document.getElementById('bancaTcc').value = agendamento.bancaTcc || '';
+            document.getElementById('orientadorTcc').value = agendamento.orientadorTcc || '';
+          } else if (agendamento.finalidade === 'MANUTENÇÃO') {
+            document.getElementById('motivoManutencao').value = agendamento.motivoManutencao || '';
+          }
+          
+          if (solicitanteSelect.options.length > 0) {
+            solicitanteSelect.value = agendamento.solicitante || '';
+          }
+          
+          if (nomeSolicitanteInput) {
+            nomeSolicitanteInput.value = agendamento.nomeSolicitante || '';
+          }
+          
+          document.getElementById('sala').value = agendamento.sala;
+          document.getElementById('data').value = agendamento.data;
+          document.getElementById('hora').value = agendamento.hora;
+          
+          agendamentoId = id;
+          actionButtons.classList.remove('hidden');
+        } else {
+          console.log("No such document!");
+        }
+      } catch (error) {
+        console.error("Error getting document:", error);
+      }
     };
 
-    window.excluirAgendamento = function(id) {
-      // Implementar a lógica de exclusão
-      console.log('Excluir agendamento:', id);
+    window.excluirAgendamento = async function(id) {
+      if (confirm('Tem certeza que deseja excluir este agendamento?')) {
+        try {
+          await deleteDoc(doc(db, "agendamentos", id));
+          document.getElementById(`agendamento-${id}`).remove();
+          alert('Agendamento excluído com sucesso!');
+        } catch (error) {
+          console.error("Error removing document: ", error);
+          alert('Erro ao excluir o agendamento. Tente novamente.');
+        }
+      }
     };
   </script>
 
