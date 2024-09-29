@@ -31,7 +31,7 @@
       margin: 10px 0 5px;
       font-weight: bold;
     }
-    input, select, textarea {
+    input, select {
       padding: 10px;
       margin-bottom: 20px;
       border: 1px solid #ccc;
@@ -50,32 +50,47 @@
     button:hover {
       background-color: #218838;
     }
-    .agendamentos {
-      margin-top: 30px;
+    .hidden {
+      display: none;
     }
-    .agendamento-item {
-      background-color: #e9ecef;
-      padding: 10px;
-      margin-bottom: 10px;
-      border-radius: 4px;
-      position: relative;
+    .action-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
     }
-    .delete-button, .edit-button {
-      position: absolute;
-      top: 10px;
-      padding: 5px 10px;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
+    .action-buttons button {
+      width: 48%;
     }
     .delete-button {
-      right: 10px;
-      background-color: red;
+      background-color: #dc3545;
     }
-    .edit-button {
-      right: 80px;
-      background-color: blue;
+    .delete-button:hover {
+      background-color: #c82333;
+    }
+    .agendamento-visualizacao {
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #e9ecef;
+      border-radius: 5px;
+    }
+    .agendamento-item {
+      margin-bottom: 10px;
+    }
+    .agendamento-item strong {
+      color: #333;
+    }
+    .agendamentos-lista {
+      margin-top: 30px;
+    }
+    .agendamento-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+    .agendamento-buttons button {
+      width: 48%;
+      padding: 5px;
+      font-size: 0.9em;
     }
   </style>
 </head>
@@ -85,7 +100,6 @@
     <h1>AGENDAMENTO DE SALAS</h1>
     <form id="agendamentoForm">
       
-      <!-- Finalidade -->
       <label for="finalidade">FINALIDADE:</label>
       <select id="finalidade" required>
         <option value="">SELECIONE A FINALIDADE</option>
@@ -93,10 +107,10 @@
         <option value="TCC">TCC</option>
         <option value="PROVA">PROVA</option>
         <option value="DISCUSSÃO DE CASO">DISCUSSÃO DE CASO</option>
+        <option value="REUNIÃO">REUNIÃO</option>
         <option value="MANUTENÇÃO">MANUTENÇÃO</option>
       </select>
 
-      <!-- Campos adicionais para TCC -->
       <div id="tccFields" class="hidden">
         <label for="temaTcc">TEMA TCC:</label>
         <input type="text" id="temaTcc" placeholder="DIGITE O TEMA DO TCC">
@@ -105,23 +119,28 @@
         <input type="text" id="bancaTcc" placeholder="DIGITE OS INTEGRANTES DA BANCA">
 
         <label for="orientadorTcc">ORIENTADOR:</label>
-        <input type="text" id="orientadorTcc" placeholder="DIGITE O NOME DO ORIENTADOR">
+        <select id="orientadorTcc">
+          <option value="">SELECIONE O ORIENTADOR</option>
+        </select>
       </div>
 
-      <!-- Campo adicional para Manutenção -->
       <div id="manutencaoFields" class="hidden">
         <label for="motivoManutencao">MOTIVO DA MANUTENÇÃO:</label>
         <input type="text" id="motivoManutencao" placeholder="DIGITE O MOTIVO DA MANUTENÇÃO">
       </div>
 
-      <!-- Solicitante -->
-      <label for="solicitante">SOLICITANTE:</label>
-      <select id="solicitante" required></select>
+      <div id="solicitanteFields" class="hidden">
+        <label for="solicitante">SOLICITANTE:</label>
+        <select id="solicitante">
+          <option value="">SELECIONE O SOLICITANTE</option>
+        </select>
+      </div>
 
-      <label for="nomeSolicitante">NOME DO SOLICITANTE:</label>
-      <input type="text" id="nomeSolicitante" required placeholder="DIGITE O NOME DO SOLICITANTE">
+      <div id="nomeSolicitanteField" class="hidden">
+        <label for="nomeSolicitante">NOME DO SOLICITANTE:</label>
+        <input type="text" id="nomeSolicitante" placeholder="DIGITE O NOME DO SOLICITANTE">
+      </div>
 
-      <!-- Sala e Data -->
       <label for="sala">ESCOLHA A SALA:</label>
       <select id="sala" required>
         <option value="Sala 1">SALA 1</option>
@@ -135,20 +154,22 @@
       <input type="time" id="hora" required>
 
       <button type="submit" id="agendarButton">AGENDAR</button>
+
+      <div class="action-buttons hidden" id="actionButtons">
+        <button type="button" id="editarButton">EDITAR AGENDAMENTO</button>
+        <button type="button" id="excluirButton" class="delete-button">EXCLUIR AGENDAMENTO</button>
+      </div>
     </form>
 
-    <div class="agendamentos">
-      <h2>AGENDAMENTOS CONFIRMADOS:</h2>
-      <div id="listaAgendamentos"></div>
+    <div class="agendamentos-lista" id="agendamentosLista">
+      <!-- Agendamentos aparecerão aqui -->
     </div>
   </div>
 
   <script type="module">
-    // Importação do Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-firestore.js";
 
-    // Configuração do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBw3KtxT-386kduvlDLyCHWYsdc_Ny3j9Y",
       authDomain: "agendamento-de-sala-c348d.firebaseapp.com",
@@ -161,114 +182,152 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    let editandoId = null;
+    const agendamentosLista = document.getElementById('agendamentosLista');
 
-    // Função para salvar ou atualizar agendamento
-    async function salvarAgendamento(agendamento) {
-      try {
-        if (editandoId) {
-          const agendamentoRef = doc(db, "agendamentos", editandoId);
-          await updateDoc(agendamentoRef, agendamento);
-          alert('Agendamento atualizado com sucesso!');
-        } else {
-          await addDoc(collection(db, 'agendamentos'), agendamento);
-          alert('Agendamento salvo com sucesso!');
-        }
-        listarAgendamentos();
-        editandoId = null;
-      } catch (error) {
-        console.error('Erro ao salvar agendamento: ', error);
-        alert('Erro ao salvar agendamento. Tente novamente.');
+    let agendamentoId = null;
+
+    const actionButtons = document.getElementById('actionButtons');
+    const finalidadeSelect = document.getElementById('finalidade');
+    const tccFields = document.getElementById('tccFields');
+    const manutencaoFields = document.getElementById('manutencaoFields');
+    const solicitanteFields = document.getElementById('solicitanteFields');
+    const nomeSolicitanteField = document.getElementById('nomeSolicitanteField');
+    const solicitanteSelect = document.getElementById('solicitante');
+    const nomeSolicitanteInput = document.getElementById('nomeSolicitante');
+
+    const professores = ['Bruna Marcele', 'Danielle Bacarelli', 'Diana Costa', 'Douglas Caragelasco', 'João Flávio', 'Lívia Biazzo', 'Mariana Miranda', 'Marilia Filiponi', 'Marta Luppi', 'Michele Barros', 'Paula Guimarães', 'Paulo Griska', 'Paulo Anselmo', 'Rafael Neves', 'Raphaela Brito'];
+    const residentes = ['R1 CLIN. PEQ', 'R2 CLIN. PEQ', 'R1 ANEST', 'R2 ANEST', 'R1 IMAGEM', 'R2 IMAGEM', 'R1 CLIN. GRANDES', 'R2 CLIN. GRANDES'];
+    const manutencaoNomes = ['Leandro Biazzo', 'Ellen Gorne'];
+
+    function atualizarSolicitante(finalidade) {
+      solicitanteSelect.innerHTML = ''; 
+      const defaultOption = document.createElement('option');
+      defaultOption.value = '';
+      defaultOption.textContent = 'SELECIONE O SOLICITANTE';
+      solicitanteSelect.appendChild(defaultOption);
+
+      if (finalidade === 'AULA' || finalidade === 'PROVA' || finalidade === 'DISCUSSÃO DE CASO') {
+        professores.concat(residentes).forEach(nome => {
+          const option = document.createElement('option');
+          option.value = nome;
+          option.textContent = nome;
+          solicitanteSelect.appendChild(option);
+        });
+      } else if (finalidade === 'TCC') {
+        solicitanteSelect.innerHTML = '<option value=""> </option>'; 
+      } else if (finalidade === 'MANUTENÇÃO') {
+        manutencaoNomes.forEach(nome => {
+          const option = document.createElement('option');
+          option.value = nome;
+          option.textContent = nome;
+          solicitanteSelect.appendChild(option);
+        });
       }
     }
 
-    // Função para listar todos os agendamentos
-    async function listarAgendamentos() {
-      const listaAgendamentos = document.getElementById('listaAgendamentos');
-      listaAgendamentos.innerHTML = '';
+    finalidadeSelect.addEventListener('change', function () {
+      const finalidade = finalidadeSelect.value;
+      tccFields.classList.add('hidden');
+      manutencaoFields.classList.add('hidden');
+      solicitanteFields.classList.add('hidden');
+      nomeSolicitanteField.classList.add('hidden');
 
-      const querySnapshot = await getDocs(collection(db, 'agendamentos'));
-      querySnapshot.forEach((doc) => {
-        const agendamento = doc.data();
-        const div = document.createElement('div');
-        div.classList.add('agendamento-item');
-        div.innerHTML = `
-          <strong>FINALIDADE:</strong> ${agendamento.finalidade}<br>
-          <strong>SOLICITANTE:</strong> ${agendamento.solicitante} - ${agendamento.nomeSolicitante}<br>
-          <strong>SALA:</strong> ${agendamento.sala}<br>
-          <strong>DATA:</strong> ${agendamento.data}<br>
-          <strong>HORA:</strong> ${agendamento.hora}<br>
-          <button class="edit-button" data-id="${doc.id}">EDITAR</button>
-          <button class="delete-button" data-id="${doc.id}">EXCLUIR</button>
-        `;
-        listaAgendamentos.appendChild(div);
-      });
-
-      // Adicionar eventos aos botões de editar e excluir
-      document.querySelectorAll('.edit-button').forEach(button => {
-        button.addEventListener('click', carregarAgendamentoParaEdicao);
-      });
-
-      document.querySelectorAll('.delete-button').forEach(button => {
-        button.addEventListener('click', excluirAgendamento);
-      });
-    }
-
-    // Função para excluir agendamento
-    async function excluirAgendamento(event) {
-      const id = event.target.getAttribute('data-id');
-      const confirmacao = confirm("Tem certeza que deseja excluir este agendamento?");
-      if (confirmacao) {
-        try {
-          await deleteDoc(doc(db, 'agendamentos', id));
-          alert('Agendamento excluído com sucesso!');
-          listarAgendamentos();
-        } catch (error) {
-          console.error('Erro ao excluir agendamento: ', error);
-          alert('Erro ao excluir agendamento.');
-        }
+      if (finalidade === 'TCC') {
+        tccFields.classList.remove('hidden');
+        solicitanteFields.classList.remove('hidden');
+        atualizarSolicitante(finalidade); 
+      } else if (finalidade === 'AULA' || finalidade === 'PROVA' || finalidade === 'DISCUSSÃO DE CASO') {
+        solicitanteFields.classList.remove('hidden');
+        atualizarSolicitante(finalidade); 
+      } else if (finalidade === 'MANUTENÇÃO') {
+        manutencaoFields.classList.remove('hidden');
+        solicitanteFields.classList.remove('hidden');
+        atualizarSolicitante(finalidade); 
+      } else if (finalidade === 'REUNIÃO') {
+        nomeSolicitanteField.classList.remove('hidden');
       }
-    }
-
-    // Função para carregar os dados de um agendamento para edição
-    function carregarAgendamentoParaEdicao(event) {
-      const id = event.target.getAttribute('data-id');
-      editandoId = id;
-
-      // Carregar dados do agendamento para o formulário
-      const div = event.target.parentElement;
-      document.getElementById('finalidade').value = div.querySelector('strong:nth-child(1)').textContent.split(': ')[1];
-      document.getElementById('solicitante').value = div.querySelector('strong:nth-child(2)').textContent.split(': ')[1].split(' - ')[0];
-      document.getElementById('nomeSolicitante').value = div.querySelector('strong:nth-child(2)').textContent.split(': ')[1].split(' - ')[1];
-      document.getElementById('sala').value = div.querySelector('strong:nth-child(3)').textContent.split(': ')[1];
-      document.getElementById('data').value = div.querySelector('strong:nth-child(4)').textContent.split(': ')[1];
-      document.getElementById('hora').value = div.querySelector('strong:nth-child(5)').textContent.split(': ')[1];
-
-      document.getElementById('agendarButton').textContent = 'ATUALIZAR';
-    }
-
-    // Função para lidar com o envio do formulário
-    const form = document.getElementById('agendamentoForm');
-    form.addEventListener('submit', function(event) {
-      event.preventDefault();
-
-      const agendamento = {
-        finalidade: document.getElementById('finalidade').value,
-        solicitante: document.getElementById('solicitante').value,
-        nomeSolicitante: document.getElementById('nomeSolicitante').value,
-        sala: document.getElementById('sala').value,
-        data: document.getElementById('data').value,
-        hora: document.getElementById('hora').value
-      };
-
-      // Salvar ou atualizar o agendamento
-      salvarAgendamento(agendamento);
-      form.reset();
-      document.getElementById('agendarButton').textContent = 'AGENDAR';
     });
 
-    // Carregar agendamentos ao carregar a página
-    window.onload = listarAgendamentos;
+    document.getElementById('agendamentoForm').addEventListener('submit', async function (event) {
+      event.preventDefault();
+
+      const finalidade = finalidadeSelect.value;
+      const solicitante = solicitanteSelect.value;
+      const nomeSolicitante = nomeSolicitanteInput ? nomeSolicitanteInput.value : '';
+      const sala = document.getElementById('sala').value;
+      const data = document.getElementById('data').value;
+      const hora = document.getElementById('hora').value;
+
+      const agendamento = {
+        finalidade,
+        solicitante,
+        nomeSolicitante,
+        sala,
+        data,
+        hora,
+      };
+
+      if (finalidade === 'TCC') {
+        agendamento.temaTcc = document.getElementById('temaTcc').value;
+        agendamento.bancaTcc = document.getElementById('bancaTcc').value;
+        agendamento.orientadorTcc = document.getElementById('orientadorTcc').value;
+      }
+
+      if (finalidade === 'MANUTENÇÃO') {
+        agendamento.motivoManutencao = document.getElementById('motivoManutencao').value;
+      }
+
+      try {
+        if (agendamentoId) {
+          await updateDoc(doc(db, "agendamentos", agendamentoId), agendamento);
+          alert('Agendamento atualizado com sucesso!');
+        } else {
+          const docRef = await addDoc(collection(db, 'agendamentos'), agendamento);
+          agendamentoId = docRef.id;
+          alert('Agendamento realizado com sucesso!');
+          actionButtons.classList.remove('hidden');
+        }
+        document.getElementById('agendamentoForm').reset();
+
+        adicionarVisualizacao(agendamento, agendamentoId);
+
+      } catch (error) {
+        console.error('Erro ao salvar o agendamento:', error);
+        alert('Erro ao salvar o agendamento, tente novamente.');
+      }
+    });
+
+    function adicionarVisualizacao(agendamento, id) {
+      const novoAgendamento = document.createElement('div');
+      novoAgendamento.classList.add('agendamento-visualizacao');
+      novoAgendamento.id = `agendamento-${id}`;
+
+      novoAgendamento.innerHTML = `
+        <h3>Agendamento Reservado</h3>
+        <div class="agendamento-item"><strong>Finalidade:</strong> ${agendamento.finalidade}</div>
+        <div class="agendamento-item"><strong>Solicitante:</strong> ${agendamento.solicitante || ''}</div>
+        ${agendamento.finalidade === 'REUNIÃO' ? `<div class="agendamento-item"><strong>Nome do Solicitante:</strong> ${agendamento.nomeSolicitante || ''}</div>` : ''}
+        <div class="agendamento-item"><strong>Sala:</strong> ${agendamento.sala}</div>
+        <div class="agendamento-item"><strong>Data:</strong> ${agendamento.data}</div>
+        <div class="agendamento-item"><strong>Hora:</strong> ${agendamento.hora}</div>
+        <div class="agendamento-buttons">
+          <button onclick="editarAgendamento('${id}')">EDITAR AGENDAMENTO</button>
+          <button onclick="excluirAgendamento('${id}')" class="delete-button">EXCLUIR AGENDAMENTO</button>
+        </div>
+      `;
+
+      agendamentosLista.appendChild(novoAgendamento);
+    }
+
+    window.editarAgendamento = function(id) {
+      // Implementar a lógica de edição
+      console.log('Editar agendamento:', id);
+    };
+
+    window.excluirAgendamento = function(id) {
+      // Implementar a lógica de exclusão
+      console.log('Excluir agendamento:', id);
+    };
   </script>
 
 </body>
